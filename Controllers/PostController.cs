@@ -116,7 +116,7 @@ namespace DotnetAPI.Controllers
 
         }
 
-        [HttpDelete("Delete")]
+        [HttpDelete("Delete/{PostId}")]
         public IActionResult DeletePost(int postId)
         {
             string sql =
@@ -133,6 +133,23 @@ namespace DotnetAPI.Controllers
             throw new Exception("Failed to delete  post!");
 
 
+        }
+        [HttpGet("PostBySearch/{searchParam}")]
+        public IEnumerable<Post> PostBySearch(string searchParam)
+        {
+            string sql = @"SELECT [PostId],
+            [UserId],
+            [PostTitle],
+            [PostContent],
+            [PostCreated],
+            [PostUpdated] 
+            FROM TutorialAppSchema.Posts
+            WHERE PostTitle LIKE '%"+ searchParam +"%'" +
+            "OR PostContent LIKE  '%"+ searchParam +"%'";
+
+
+
+            return _dapper.LoadData<Post>(sql);
         }
 
 
