@@ -5,10 +5,12 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using AutoMapper;
 using Dapper;
 using DotnetAPI.Data;
 using DotnetAPI.Dtos;
 using DotnetAPI.Helpers;
+using DotnetAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
@@ -26,94 +28,52 @@ namespace DotnetAPI.Controllers
     {
         private readonly DataContextDapper _dapper;
         private readonly AuthHelper _authHelper;
+        private readonly ReusableSql  _reusableSql;
+        private readonly IMapper _mapper;
         public AuthController(IConfiguration config)
         {
             _dapper = new DataContextDapper(config);
             _authHelper = new AuthHelper(config);
+            _reusableSql = new ReusableSql(config);
+            _mapper = new Mapper(new MapperConfiguration(cfg =>
+            {
+                cfg.CreateMap<UserForRegistrationDto, UserComplete>();
+            }));
         }
 
         [AllowAnonymous]
         [HttpPost("Register")]
         public IActionResult Register(UserForRegistrationDto userForRegistration)
         {
-            if (userForRegistration.Password == userForRegistration.Password)
+            if (userForRegistration.Password == userForRegistration.PasswordConfirm)
             {
-                string sqlCheckUserExist =
-                "SELECT Email FROM TutorialAppSchema.Auth WHERE Email ='" + userForRegistration.Email + "'";
-                IEnumerable<string> existingUser = _dapper.LoadData<string>(sqlCheckUserExist);
-                if (existingUser.Count() == 0)
+                string sqlCheckUserExists = "SELECT Email FROM TutorialAppSchema.Auth WHERE Email = '" +
+                    userForRegistration.Email + "'";
+
+                IEnumerable<string> existingUsers = _dapper.LoadData<string>(sqlCheckUserExists);
+                if (existingUsers.Count() == 0)
                 {
-                    // byte[] passwordSalt = new byte[128 / 8];
-                    // using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
-                    // {
-                    //     rng.GetNonZeroBytes(passwordSalt);
-                    // }
-
-                    // // string passwordSaltPlusString =_config.GetSection("Appsettings:PasswordKey")
-                    // // .Value + Convert.ToBase64String(passwordSalt);
-
-                    // byte[] passwordHash = _authHelper.GetPasswordHash(userForRegistration.Password, passwordSalt);
-
-                    // string sqlAddAuth =
-                    // @"EXEC TutorialAppSchema.spRegistration_Upsert 
-                    // @Email = @EmailParam,
-                    // @PasswordHash = @PasswordHashParam, 
-                    // @PasswordSalt = @PasswordHashSaltParam ";
-
-
-                    // List<SqlParameter> sqlParameters = new List<SqlParameter>();
-
-                    // SqlParameter emailParameter = new SqlParameter("@EmailParam", SqlDbType.VarChar);
-                    // emailParameter.Value = userForRegistration.Email;
-                    // sqlParameters.Add(emailParameter);
-
-                    // SqlParameter passwordSaltParameter = new SqlParameter("@PasswordHashSaltParam", SqlDbType.VarBinary);
-                    // passwordSaltParameter.Value = passwordSalt;
-                    // sqlParameters.Add(passwordSaltParameter);
-
-                    // SqlParameter passwordHashParameter = new SqlParameter("@PasswordHashParam", SqlDbType.VarBinary);
-                    // passwordHashParameter.Value = passwordHash;
-                    // sqlParameters.Add(passwordHashParameter);
-
-                    UserForLoginDto userForSetPassword = new UserForLoginDto()
-                    {
+                    UserForLoginDto userForSetPassword = new UserForLoginDto() {
                         Email = userForRegistration.Email,
                         Password = userForRegistration.Password
                     };
                     if (_authHelper.SetPassword(userForSetPassword))
                     {
-                        string sqlAddUser = @"EXEC TutorialAppSchema.spUser_Upsert
-                            @FirstName = '" + userForRegistration.FirstName +
-                      "', @LastName = '" + userForRegistration.LastName +
-                      "', @Email = '" + userForRegistration.Email +
-                      "', @Gender = '" + userForRegistration.Gender +
-                      "', @Active = 1" +
-                      ", @JobTitle = '" + userForRegistration.JobTitle +
-                      "', @Department = '" + userForRegistration.Department +
-                      "', @Salary = '" + userForRegistration.Salary + "'";
+                        UserComplete userComplete = _mapper.Map<UserComplete>(userForRegistration);
+                        userComplete.Active = true;
 
-                        // ) VALUES (" +
-                        //  "'" + userForRegistration.FirstName +
-                        //  "', '" + userForRegistration.LastName +
-                        // "', '" + userForRegistration.Email +
-                        // "', '" + userForRegistration.Gender +
-                        // "', 1)";
-                        if (_dapper.ExecuteSql(sqlAddUser))
+                        if (_reusableSql.UpsertUser(userComplete))
                         {
                             return Ok();
                         }
-                        throw new Exception("Failed to add user");
-
+                        throw new Exception("Failed to add user.");
                     }
-                    throw new Exception("Failled to register User :'0 ");
-
+                    throw new Exception("Failed to register user.");
                 }
-                throw new Exception("there are already an user with this Email :/ ");
+                throw new Exception("User with this email already exists!");
             }
-            throw new Exception("Password no matching :(");
-
+            throw new Exception("Passwords do not match!");
         }
-
         [HttpPut("Reset_Password")]
 
         public IActionResult ResetPassword(UserForLoginDto userForSetPassword)
