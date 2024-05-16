@@ -14,6 +14,7 @@ This project is Based on a crash course online on how to build an advanced API i
 
 -  C#
 -  ASP.NET Core
+-  Dapper
 -  Entity Framework Core
 -  JWT (JSON Web Token)
 -  Swagger
@@ -23,6 +24,7 @@ This project is Based on a crash course online on how to build an advanced API i
 -  Building web APIs using ASP.NET Core.
 -  Designing and developing RESTful APIs.
 -  Implementing CRUD operations for data persistence (likely using Entity Framework Core).
+-  Implementing stored procedures with SQL Server.
 -  Securing APIs with Bearer token authentication using JWT.
 -  Utilizing Swagger for API documentation and testing.
 
