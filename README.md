@@ -12,11 +12,11 @@ This project is Based on a crash course online on how to build an advanced API i
 
 ## Technologies
 
--  ASP.NET Core: A modern, open-source framework for building web APIs and applications in C#.
--  C#: A general-purpose, object-oriented programming language.
--  Entity Framework Core (likely used in the course): A lightweight object-relational mapper (ORM) for interacting with databases in ASP.NET Core applications.
--  JWT (JSON Web Token): A popular standard for secure authorization by encoding claims (information) about a user in a compact, digital signature.
--  Swagger: An open-source framework for generating interactive API documentation.
+-  C#
+-  ASP.NET Core
+-  Entity Framework Core
+-  JWT (JSON Web Token)
+-  Swagger
 
 ## Skills Learned
 
