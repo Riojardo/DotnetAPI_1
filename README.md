@@ -22,5 +22,5 @@ Skills Learned
 -  Designing and developing RESTful APIs.
 -  Implementing CRUD operations for data persistence (likely using Entity Framework Core).
 -  Securing APIs with Bearer token authentication using JWT.
--   tilizing Swagger for API documentation and testing.
+-  Utilizing Swagger for API documentation and testing.
 
